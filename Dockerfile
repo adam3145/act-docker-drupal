@@ -39,6 +39,9 @@ RUN /bin/drush dl drush_language-7.x
 #RUN sed -i "s/^bind-address/#bind-address/" /etc/mysql/my.cnf
 ADD files/root/.my.cnf.sample /root/.my.cnf.sample
 
+
+
+
 # Sample backup script
 ADD files/backup.sh  /root/backup.sh
 # Webfactory specifc
