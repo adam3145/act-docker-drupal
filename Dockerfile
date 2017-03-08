@@ -103,7 +103,41 @@ ENV \
 
 # /ENV
 
+###BLACKFIRE DOCKER IMAGE
 
+ENV BLACKFIRE_LOG_LEVEL 1
+ENV BLACKFIRE_LOG_FILE /tmpfs/logs/blackfire.log
+ENV BLACKFIRE_SOCKET unix:///var/run/blackfire/agent.sock
+ENV BLACKFIRE_SERVER_ID 396f0342-0c16-4ae6-8cc9-69ded417051e
+ENV BLACKFIRE_SERVER_TOKEN 1863f9782aaab5bcee0e07a007d126771578753674bdf5a4a8875cd43fea5fe7
+ENV BLACKFIRE_CLIENT_ID 6c339f06-c6c4-4752-aaac-fc8de6597091
+ENV BLACKFIRE_CLIENT_TOKEN 358e1ff5f48ba1e421fd6d32e1ecdbe97a93ffd26b3362fe019fc42aabdf5091
+
+
+RUN wget -O - https://packagecloud.io/gpg.key | apt-key add - && \
+    echo "deb http://packages.blackfire.io/debian any main" | tee /etc/apt/sources.list.d/blackfire.list
+
+RUN \
+    apt-get update && \
+    apt-get install -y \
+    blackfire-agent \
+    blackfire-php
+
+RUN curl -A "Docker" -o /tmp/blackfire-probe.tar.gz -D - -L -s https://blackfire.io/api/v1/releases/probe/php/linux/amd64/56 \
+    && tar zxpf /tmp/blackfire-probe.tar.gz -C /tmp \
+    && mv /tmp/blackfire-*.so $(php -r "echo ini_get('extension_dir');")/blackfire.so
+
+COPY /blackfire/5.6/blackfire-agent.ini /etc/blackfire/agent
+COPY /blackfire/5.6/blackfire-php.ini /etc/php5/fpm/conf.d/92-blackfire-config.ini
+COPY /blackfire/5.6/blackfire-php.ini /etc/php5/cli/conf.d/92-blackfire-config.ini
+
+COPY /blackfire/5.6/blackfire-run.sh /blackfire-run.sh
+
+ENTRYPOINT ["/bin/bash", "/blackfire-run.sh"]
+
+
+
+        
 # Setup a default postfix to allow local delivery and stop drupal complaining
 #  for external delivery add local config to custom.sh such as:
 #  postconf -e 'relayhost = myrelay.example.ch'
